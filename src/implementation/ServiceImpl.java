@@ -11,7 +11,7 @@ public class ServiceImpl implements Service {
     @Override
     public List<String> run(String item, double value, Date date) {
         List<String> list = new ArrayList<>();
-        for (int i = 0; i < 100; i++) list.add(item + " " + value + " " + date);
+        for (int i = 0; i < 2; i++) list.add(item + " " + value + " " + date);
         return list;
     }
 
