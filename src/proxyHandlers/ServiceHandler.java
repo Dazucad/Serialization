@@ -34,21 +34,27 @@ public class ServiceHandler implements InvocationHandler {
             if (method.getName().equals("run") || method.getName().equals("work")) {
                 if (cache.cacheType() == Cache.FILE) {
                     Map<MethodArgs, List<String>> cachedData = new HashMap<>();
+                    if (cachedResults.containsKey(new MethodArgs(cache.identityBy(), args))) {
+                        System.out.println("Взято из кеша");
+                        return cachedResults.get(new MethodArgs(cache.identityBy(), args));
+                    }
                     try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(cache.fileNamePrefix()))) {
+                        System.out.println("Загрузка файла");
                         cachedData = (Map<MethodArgs, List<String>>) objectInputStream.readObject();
                         for (Map.Entry<MethodArgs, List<String>> a : cachedData.entrySet())
                             cachedResults.put(a.getKey(), a.getValue());
+                        if (cachedResults.containsKey(new MethodArgs(cache.identityBy(), args))) {
+                            System.out.println("Взято из кеша");
+                            return cachedResults.get(new MethodArgs(cache.identityBy(), args));
+                        }
                     } catch (FileNotFoundException e) {
                         System.out.println("Файл не найден, проводится обычный расчет");
                     } catch (EOFException e) {
                         System.out.println("В файле нет данных, проводится стандартный расчет");
                     }
-                    if (cachedResults.containsKey(new MethodArgs(cache.identityBy(), args))) {
-                        System.out.println("Взято из кеша");
-                        return cachedResults.get(new MethodArgs(cache.identityBy(), args));
-                    }
-                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(cache.fileNamePrefix()));
 
+                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(cache.fileNamePrefix()));
+                    System.out.println("В кеше данных нет");
                     List<String> list = (List<String>) method.invoke(original, args);
                     cachedResults.put(new MethodArgs(cache.identityBy(), args), list);
                     objectOutputStream.writeObject(cachedResults);
