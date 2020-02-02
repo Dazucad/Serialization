@@ -32,8 +32,10 @@ public class ServiceHandler implements InvocationHandler {
         if (method.isAnnotationPresent(Cache.class)) {
             Cache cache = method.getDeclaredAnnotation(Cache.class);
             if (method.getName().equals("run") || method.getName().equals("work")) {
+                //загрузка из файла
                 if (cache.cacheType() == Cache.FILE) {
                     Map<MethodArgs, List<String>> cachedData = new HashMap<>();
+                    //проверка загружены ли уже данные
                     if (cachedResults.containsKey(new MethodArgs(cache.identityBy(), args))) {
                         System.out.println("Взято из кеша");
                         return cachedResults.get(new MethodArgs(cache.identityBy(), args));
@@ -43,6 +45,7 @@ public class ServiceHandler implements InvocationHandler {
                         cachedData = (Map<MethodArgs, List<String>>) objectInputStream.readObject();
                         for (Map.Entry<MethodArgs, List<String>> a : cachedData.entrySet())
                             cachedResults.put(a.getKey(), a.getValue());
+                        //проверка загруженных данных
                         if (cachedResults.containsKey(new MethodArgs(cache.identityBy(), args))) {
                             System.out.println("Взято из кеша");
                             return cachedResults.get(new MethodArgs(cache.identityBy(), args));
@@ -52,7 +55,7 @@ public class ServiceHandler implements InvocationHandler {
                     } catch (EOFException e) {
                         System.out.println("В файле нет данных, проводится стандартный расчет");
                     }
-
+                    //ручной расчет и сохранение данных в кеш
                     ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(cache.fileNamePrefix()));
                     System.out.println("В кеше данных нет");
                     List<String> list = (List<String>) method.invoke(original, args);
